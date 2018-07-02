@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2017",
+    "pretty": true,
+    "declaration": true,
+    "noImplicitAny": false,
+    "allowJs": false,
+    "skipLibCheck": true,
+
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "baseUrl": ".",
+
+    "types": ["node", "mocha"],
+    "typeRoots": [
+      "../node_modules/@types"
+    ],
+    "paths": {
+      "*": [
+        "../node_modules/*"
+      ]
+    }
+  },
+  "include": [
+    "*.test.ts"
+  ]
+}

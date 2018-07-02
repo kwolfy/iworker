@@ -54,14 +54,12 @@ export class WorkerGroup {
   }
 
   private makeObjectSchemaSourceWrapper(source: IObjectSchema) {
-    const schema = searializeSchema(source)
+    const schema = searializeSchema(source);
 
     return this.makeSourceWrapper(`
       const schema = ${schema};
-      console.log('schema', schema);
       for(let key of Object.keys(schema)) {
-        console.log(schema[key]);
-        worker.method(key, schema[key]);
+        worker.def(key, schema[key]);
       }
     `);
   }
@@ -135,7 +133,7 @@ export class Thread {
     this.emitter.emit(data.eventName, ...data.args);
   }
 
-  call(method: string, ...args: any[]) {
+  call(method: string, ...args: any[]): CallPromise<any> {
     return new CallPromise(this, method, args);
   }
 
@@ -148,7 +146,7 @@ export class Thread {
     });
   }
 
-  emit(eventName: string, args: any[]) {
+  emit(eventName: string, ...args: any[]) {
     this.worker.postMessage({ type: MessageSendType.Event, payload: { eventName, args } });
   }
 
@@ -175,22 +173,13 @@ class CallPromise<T = any> implements ICallPromise<T>{
   private transferList: any[];
   private called = false;
 
-  private res: (value?: T | PromiseLike<T>) => void;
-  private rej: (reason?: any) => void;
-  private readonly promise: Promise<T>;
+  private promise: Promise<any>;
 
   constructor(
     private thread: Thread, private methodName: string,
-    private args: any[]) {
-    this.promise = new Promise((resolve, reject) => {
-      this.res = resolve;
-      this.rej = reject;
-    });
-  }
-
+    private args: any[]) {}
 
   withTransferList(list: any[]) {
-    console.log('withTransferList');
     this.transferList = list;
     return this;
   }
@@ -204,18 +193,22 @@ class CallPromise<T = any> implements ICallPromise<T>{
     return this;
   }
 
-  then(fn: (value: any) => any) {
-    if(!this.called) {
-      this.called = true;
-      const promise = this.thread._call(this.methodName, this.args, this.transferList, this.handleEvents.bind(this));
-      promise.then(this.res).catch(this.rej);
-    }
-
-    return this.promise.then(fn);
+  then(resolve: (value: any) => any, reject?: (value: any) => any) {
+    return this.callIfNot().then(resolve, reject);
   }
 
   catch(fn: (value: any) => any) {
-    return this.promise.catch(fn);
+    return this.callIfNot().catch(fn);
+  }
+
+  private callIfNot() {
+    if(!this.called) {
+      this.called = true;
+      this.promise = this.thread._call(this.methodName, this.args, this.transferList, this.handleEvents.bind(this));
+      this.args = null;
+    }
+
+    return this.promise;
   }
 
   private handleEvents(eventName: string, ...args: any[]) {
