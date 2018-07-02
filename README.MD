@@ -1,4 +1,4 @@
-## IWorker
+## IWorker [![Build Status](https://travis-ci.org/kwolfy/iworker.svg?branch=master)](https://travis-ci.org/kwolfy/iworker)
 
 Promise-based wrapper for worker_threads
 
