@@ -29,6 +29,18 @@ describe('IWorker', () => {
     w.terminate();
   });
 
+  it('should terminate worker', async () => {
+    const w = wg.newThread<ISchema>({
+      async foo(bar: string) {
+        return 'foo' + bar;
+      }
+    });
+    w.terminate();
+
+    const err = await captureErr(w.call('foo', 'bar'));
+    assert.strictEqual(err.message, 'Cannot read property \'postMessage\' of null');
+  });
+
 
   it('should send transferable objects', async () => {
     const w = wg.newThread({
@@ -135,6 +147,7 @@ describe('IWorker', () => {
 
     const res = await w.foo('bar');
     assert.strictEqual(res, 'foobar');
+    w.terminate();
   });
 
   function cbToPromise() {
