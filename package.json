@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && node --experimental-worker node_modules/.bin/_mocha --require ts-node/register test/index.test.ts"
+    "test": "npm run build && node --experimental-worker node_modules/.bin/_mocha --require ts-node/register test/index.test.ts",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
