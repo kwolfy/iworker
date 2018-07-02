@@ -115,7 +115,7 @@ const buf = await worker.foo();
 
 You can use iworker as pure event-emitter
 
-```
+```js
 const worker = wg.newThread((w) => {
   w.on('event', (...args) => w.emit('eventBack', 'arg1', 'arg2'));
 });
