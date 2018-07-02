@@ -1,0 +1,33 @@
+{
+  "name": "iworker",
+  "version": "0.0.1",
+  "description": "Nodejs worker_threads promised wrapper",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kwolfy/iworker.git"
+  },
+  "keywords": [
+    "worker_threads",
+    "worker",
+    "promise",
+    "threads"
+  ],
+  "author": "kwolfy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kwolfy/iworker/issues"
+  },
+  "homepage": "https://github.com/kwolfy/iworker#readme",
+  "devDependencies": {
+    "@types/mocha": "^5.2.4",
+    "@types/node": "^10.5.1",
+    "ts-node": "^7.0.0",
+    "typescript": "^2.9.2"
+  },
+  "dependencies": {}
+}
