@@ -16,7 +16,7 @@ describe('IWorker', () => {
     assert.strictEqual(await w.call('foo', 'bar'), 'foobar');
     assert.strictEqual(await w.call('bar', 'foo'), 'barfoo');
     assert.strictEqual(await w.call('baz', 'foo'), 'foobaz');
-    w.terminate();
+    await w.terminate();
   });
 
   it('should create by factory', async () => {
@@ -26,7 +26,7 @@ describe('IWorker', () => {
 
     assert.strictEqual(await w.call('foo'), true);
 
-    w.terminate();
+    await w.terminate();
   });
 
   it('should terminate worker', async () => {
@@ -35,10 +35,11 @@ describe('IWorker', () => {
         return 'foo' + bar;
       }
     });
-    w.terminate();
+
+    await w.terminate();
 
     const err = await captureErr(w.call('foo', 'bar'));
-    assert.strictEqual(err.message, 'Cannot read property \'postMessage\' of null');
+    assert.strictEqual(err.message, 'this.worker.postMessage is not a function');
   });
 
 
@@ -56,7 +57,7 @@ describe('IWorker', () => {
     assert.strictEqual(res, bufHex);
     assert.strictEqual(buf.length, 0);
 
-    w.terminate();
+    await w.terminate();
   });
 
   it('should response transferable objects', async () => {
@@ -72,7 +73,7 @@ describe('IWorker', () => {
     const res = await w.call('foo', buf);
     assert.strictEqual(Buffer.from(res.buf).toString('hex'), buf.toString('hex'));
 
-    w.terminate();
+    await w.terminate();
   });
 
   it('should throw error when call undefined method', async () => {
@@ -81,7 +82,7 @@ describe('IWorker', () => {
     const err = await captureErr(w.call('foo'));
     assert.strictEqual(err.message, 'Method foo is unhandled');
 
-    w.terminate();
+    await w.terminate();
   });
 
   it('should transfer method throw', async () => {
@@ -90,7 +91,7 @@ describe('IWorker', () => {
     const err = await captureErr(w.call('foo'));
     assert.strictEqual(err.message, 'FooError');
 
-    w.terminate();
+    await w.terminate();
   });
 
 
@@ -114,7 +115,7 @@ describe('IWorker', () => {
     assert.strictEqual(events.join(''), '012');
     assert.strictEqual(res, 'bar');
 
-    w.terminate();
+    await w.terminate();
   });
 
   it('should send pure events', async() => {
@@ -131,7 +132,7 @@ describe('IWorker', () => {
     const resp = await promise;
     assert.strictEqual(resp, '123');
 
-    w.terminate();
+    await w.terminate();
   });
 
   interface ISchema {
@@ -147,7 +148,7 @@ describe('IWorker', () => {
 
     const res = await w.foo('bar');
     assert.strictEqual(res, 'foobar');
-    w.terminate();
+    await w.terminate();
   });
 
   function cbToPromise() {
