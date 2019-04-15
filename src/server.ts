@@ -158,8 +158,17 @@ export class Thread {
     this.emitter.off(eventName, handler);
   }
 
-  terminate() {
-    this.worker.terminate();
+  terminate(): Promise<void> {
+    return new Promise((res, rej) => {
+      this.worker.terminate((err: any) => {
+        this.worker = null;
+        if(err) {
+          rej(err);
+        } else {
+          res();
+        }
+      });
+    });
   }
 }
 
