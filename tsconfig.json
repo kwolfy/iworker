@@ -5,7 +5,7 @@
     "outDir": "./lib",
     "pretty": true,
     "declaration": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "allowJs": false,
     "skipLibCheck": true,
 

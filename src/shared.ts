@@ -1,7 +1,7 @@
 export interface CallHandler {
-  res(arg: any)
-  rej(arg: any)
-  onEvent(eventName: string, ...args: any[])
+  res(arg: any): void
+  rej(arg: any): void
+  onEvent(eventName: string, ...args: any[]): void
 }
 
 export enum MessageSendType {

@@ -23,14 +23,14 @@ export interface IObjectSchema {
   [key: string]: IPureWorkerFunc
 }
 
-export interface ISchemaFactory {
-  (worker: ThreadClient)
+export interface ISchemaFactory<T> {
+  (worker: ThreadClient): T
 }
 
 export class WorkerGroup {
   private _workers: Thread[] = [];
 
-  newThread<T>(source: string | ISchemaFactory | IObjectSchema, workerData = {}): T & Thread {
+  newThread<T = IObjectSchema>(source: string | ISchemaFactory<T> | IObjectSchema, workerData = {}): T & Thread {
     let isEval = !(typeof source === 'string');
     if(typeof source === 'object') {
       source = this.makeObjectSchemaSourceWrapper(source);
@@ -43,7 +43,7 @@ export class WorkerGroup {
     this.workers.push(thread);
 
     return new Proxy(thread, {
-      get(target, prop) {
+      get(target: any, prop) {
         if(target[prop])
           return target[prop];
         else if(typeof prop === 'string') {
@@ -64,7 +64,7 @@ export class WorkerGroup {
     `);
   }
 
-  private makeFactorySourceWrapper(source: ISchemaFactory) {
+  private makeFactorySourceWrapper(source: ISchemaFactory<any>) {
     const fn = source.toString();
     return this.makeSourceWrapper(`(${fn})(worker);`);
   }
@@ -114,12 +114,12 @@ export class Thread {
   }
 
   private onCallEvent(data: ICallEventPayload) {
-    const handler: CallHandler = this.callHandlers[data.id];
+    const handler: CallHandler = this.callHandlers.get(data.id);
     handler.onEvent(data.eventName, ...data.args);
   }
 
   private onCallResult(data: ICallResultPayload) {
-    const handler: CallHandler = this.callHandlers[data.id];
+    const handler: CallHandler = this.callHandlers.get(data.id);
     this.callHandlers.delete(data.id);
 
     if(data.type === ResultType.Success) {
@@ -141,7 +141,7 @@ export class Thread {
     const id = this.counter++;
 
     return new Promise((res, rej) => {
-      this.callHandlers[id] = { res, rej, onEvent: onEvent || function() {} };
+      this.callHandlers.set(id, { res, rej, onEvent: onEvent || function() {} });
       this.worker.postMessage({ type: MessageSendType.Call, payload: { id, method, args } }, transferList);
     });
   }
@@ -185,10 +185,10 @@ class CallPromise<T = any> implements ICallPromise<T>{
   }
 
   on(eventName: string, handler: (...args: any[]) => void) {
-    if(!this.handlers[eventName]) {
-      this.handlers[eventName] = [];
+    if(!this.handlers.has(eventName)) {
+      this.handlers.set(eventName, []);
     }
-    this.handlers[eventName].push(handler);
+    this.handlers.get(eventName).push(handler);
 
     return this;
   }
@@ -212,8 +212,8 @@ class CallPromise<T = any> implements ICallPromise<T>{
   }
 
   private handleEvents(eventName: string, ...args: any[]) {
-    if(this.handlers[eventName]) {
-      for(const handler of this.handlers[eventName]) {
+    if(this.handlers.has(eventName)) {
+      for(const handler of this.handlers.get(eventName)) {
         handler(...args);
       }
     }

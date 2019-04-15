@@ -104,7 +104,7 @@ describe('IWorker', () => {
       }
     });
 
-    const events = [];
+    const events: string[] = [];
     const res = await w
       .call('foo', 3)
       .on('someEvent', (n) => {
@@ -157,7 +157,7 @@ describe('IWorker', () => {
     return { cb, promise };
   }
 
-  async function captureErr(promise) {
+  async function captureErr(promise: Promise<any>) {
     try {
       await promise;
     } catch(e) {

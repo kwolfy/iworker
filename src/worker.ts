@@ -20,8 +20,8 @@ interface CallMethodChan {
 }
 
 interface IPort {
-  postMessage(msg: IReturnMessage, transferList?: any[])
-  on(eventName: string, handler: (msg: ISendMessage) => any)
+  postMessage(msg: IReturnMessage, transferList?: any[]): void
+  on(eventName: string, handler: (msg: ISendMessage) => any): void
 }
 
 export class ThreadClient {
@@ -45,21 +45,19 @@ export class ThreadClient {
   }
 
   private async onCallMethod(data: ICallPayload) {
-    const handler = this.handlers[data.method];
-    if(!handler) {
-      const err = new CallUndefinedMethodException(`Method ${data.method} is unhandled`);
-      return this.returnCallError(data.id, err);
-    }
-
-    const ch = { transferList: [] };
-
     try {
+      const handler = this.handlers.get(data.method);
+      if(!handler) {
+        const err = new CallUndefinedMethodException(`Method ${data.method} is unhandled`);
+        return this.returnCallError(data.id, err);
+      }
+
+      const ch: CallMethodChan = { transferList: [] };
       const res = await handler.bind(this.makeCallContext(data, ch))(...data.args);
       return this.returnCallSuccess(data.id, res, ch.transferList);
     } catch (e) {
       return this.returnCallError(data.id, e);
     }
-
   }
 
   private makeCallContext(data: ICallPayload, ch: CallMethodChan) {
@@ -77,7 +75,7 @@ export class ThreadClient {
   }
 
   private returnCallSuccess(id: number, data: any, transferList: any[] = []) {
-    const payload = { type: ResultType.Success, id, data, err: null };
+    const payload: ICallResultPayload = { type: ResultType.Success, id, data, err: null };
     this.port.postMessage({ type: MessageReturnType.CallResult, payload }, transferList);
   }
 
@@ -104,14 +102,14 @@ export class ThreadClient {
   }
 
   def(name: string, handler:IMethodHandler): ThreadClient {
-    this.handlers[name] = handler;
+    this.handlers.set(name, handler);
     return this;
   }
 }
 
 
 class CallUndefinedMethodException extends Error {
-  constructor(message) {
+  constructor(message: string) {
     super(message);
   }
 }
