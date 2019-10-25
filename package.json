@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Nodejs worker_threads promised wrapper",
   "main": "lib/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node --experimental-worker node_modules/.bin/_mocha --require ts-node/register test/index.test.ts",
