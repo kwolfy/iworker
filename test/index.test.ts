@@ -21,16 +21,21 @@ describe('IWorker', () => {
 
   it('should create by factory', async () => {
     const w = wg.newThread((worker: ThreadClient) => {
-      worker.def('foo', async () => { return true; });
+      const crypto = require('crypto');
+      return {
+        async foo(key: string) {
+          return crypto.createHash('sha256').update(key).digest().slice(0, 4).toString('hex');
+        }
+      }
     });
 
-    assert.strictEqual(await w.call('foo'), true);
+    assert.strictEqual(await w.foo('bar'), 'fcde2b2e');
 
     await w.terminate();
   });
 
   it('should terminate worker', async () => {
-    const w = wg.newThread<ISchema>({
+    const w = wg.newThread({
       async foo(bar: string) {
         return 'foo' + bar;
       }
@@ -122,6 +127,8 @@ describe('IWorker', () => {
       worker.on('someEvent', (...args: any[]) => {
         worker.emit('someEventBack', args.join(''));
       });
+
+      return {};
     });
 
     let { cb, promise } = cbToPromise();
@@ -134,12 +141,8 @@ describe('IWorker', () => {
     await w.terminate();
   });
 
-  interface ISchema {
-    foo(bar: string): ICallPromise<string>
-  }
-
   it('should proxy direct calls', async () => {
-    const w = wg.newThread<ISchema>({
+    const w = wg.newThread({
       async foo(bar: string) {
         return 'foo' + bar;
       }

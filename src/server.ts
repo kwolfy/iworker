@@ -23,14 +23,16 @@ export interface IObjectSchema {
   [key: string]: IPureWorkerFunc
 }
 
-export interface ISchemaFactory<T> {
-  (worker: ThreadClient): T
+export interface ISchemaFactory {
+  (worker: ThreadClient): IObjectSchema
 }
 
 export class WorkerGroup {
   private _workers: Thread[] = [];
 
-  newThread<T = IObjectSchema>(source: string | ISchemaFactory<T> | IObjectSchema, workerData = {}): T & Thread {
+  newThread<T extends IObjectSchema>(source: T): Thread & T;
+  newThread<T extends ISchemaFactory>(source: T): Thread & ReturnType<T>;
+  newThread(source: string | ISchemaFactory | IObjectSchema, workerData = {}):  Thread {
     let isEval = !(typeof source === 'string');
     if(typeof source === 'object') {
       source = this.makeObjectSchemaSourceWrapper(source);
@@ -57,16 +59,22 @@ export class WorkerGroup {
     const schema = searializeSchema(source);
 
     return this.makeSourceWrapper(`
-      const schema = ${schema};
-      for(let key of Object.keys(schema)) {
-        worker.def(key, schema[key]);
+      const __schema__ = ${schema};
+      for(let key of Object.keys(__schema__)) {
+        worker.def(key, __schema__[key]);
       }
     `);
   }
 
-  private makeFactorySourceWrapper(source: ISchemaFactory<any>) {
+  private makeFactorySourceWrapper(source: ISchemaFactory) {
     const fn = source.toString();
-    return this.makeSourceWrapper(`(${fn})(worker);`);
+    return this.makeSourceWrapper(`
+      const __schema__ = (${fn})(worker);
+      
+      for(let key of Object.keys(__schema__)) {
+        worker.def(key, __schema__[key]);
+      }
+    `);
   }
 
   private makeSourceWrapper(source: string): string {
