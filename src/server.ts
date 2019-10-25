@@ -1,6 +1,5 @@
 import * as EventEmitter from 'events';
 import * as path from 'path';
-import * as fs from 'fs';
 
 import {
   CallHandler,
@@ -10,6 +9,7 @@ import {
   IReturnMessage,
   MessageReturnType, MessageSendType, ResultType
 } from "./shared";
+
 import {ThreadClient} from "./worker";
 import {searializeSchema} from "./util";
 
