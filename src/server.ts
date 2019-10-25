@@ -13,7 +13,7 @@ import {
 import {ThreadClient} from "./worker";
 import {searializeSchema} from "./util";
 
-const w = require('worker_threads');
+import { Worker } from 'worker_threads';
 
 export interface IPureWorkerFunc {
   (...args: any[]): PromiseLike<any>
@@ -38,7 +38,7 @@ export class WorkerGroup {
       source = this.makeFactorySourceWrapper(source);
     }
 
-    const worker = new w.Worker(source, { eval: isEval, workerData });
+    const worker = new Worker(source, { eval: isEval, workerData });
     const thread = new Thread(this, worker);
     this.workers.push(thread);
 
@@ -96,9 +96,13 @@ export class Thread {
   private counter = 1;
   private callHandlers = new Map<number, CallHandler>();
   private emitter = new EventEmitter();
+  private isWorkerExited = false;
 
-  constructor(private wg: WorkerGroup, private worker: any) {
+  constructor(private wg: WorkerGroup, private worker: Worker) {
     worker.on('message', this.onMessage.bind(this));
+    worker.once('exit', () => {
+      this.isWorkerExited = true;
+    });
   }
 
   private onMessage(msg: IReturnMessage) {
@@ -141,6 +145,9 @@ export class Thread {
     const id = this.counter++;
 
     return new Promise((res, rej) => {
+      if (this.isWorkerExited === true) {
+        return rej(new Error('Worker is not alive'));
+      }
       this.callHandlers.set(id, { res, rej, onEvent: onEvent || function() {} });
       this.worker.postMessage({ type: MessageSendType.Call, payload: { id, method, args } }, transferList);
     });
@@ -158,17 +165,8 @@ export class Thread {
     this.emitter.off(eventName, handler);
   }
 
-  terminate(): Promise<void> {
-    return new Promise((res, rej) => {
-      this.worker.terminate((err: any) => {
-        this.worker = null;
-        if(err) {
-          rej(err);
-        } else {
-          res();
-        }
-      });
-    });
+  async terminate(): Promise<void> {
+    await this.worker.terminate();
   }
 }
 

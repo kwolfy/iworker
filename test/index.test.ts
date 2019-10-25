@@ -37,9 +37,8 @@ describe('IWorker', () => {
     });
 
     await w.terminate();
-
     const err = await captureErr(w.call('foo', 'bar'));
-    assert.strictEqual(err.message, 'this.worker.postMessage is not a function');
+    assert.strictEqual(err.message, 'Worker is not alive');
   });
 
 
