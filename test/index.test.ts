@@ -160,7 +160,7 @@ describe('IWorker', () => {
     return { cb, promise };
   }
 
-  async function captureErr(promise: Promise<any>) {
+  async function captureErr(promise: PromiseLike<any>) {
     try {
       await promise;
     } catch(e) {
