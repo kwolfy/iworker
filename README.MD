@@ -2,10 +2,6 @@
 
 Promise-based wrapper for worker_threads
 
-**Warning: worker_threads is experimental**
->Stability: 1 - Experimental. This feature is still under active development and subject to non-backwards compatible changes, or even removal, in any future version. Use of the feature is not recommended in production environments. Experimental features are not subject to the Node.js Semantic Versioning model.
-
-
 ## Install
 
 ```bash
@@ -70,7 +66,7 @@ const res = await worker.foo()
   .on('started', () => {
     // do some job
   })
-  .progress('progress', (per) => {
+  .on('progress', (per) => {
     // do some job
   });
   
